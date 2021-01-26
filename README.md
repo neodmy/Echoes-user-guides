@@ -7,7 +7,7 @@ El objetivo de este documento es proporcionar una guía de usuario para facilita
 
 Esta guía está sujeta a revisión, por lo que, si encuentra algún problema en alguna de las instrucciones facilitadas, póngase en contacto con el autor de esta. Así mismo, si ha sido capaz de encontrar la solución a un problema durante este proceso, le ruego lo comparta con la comunidad para completar esta guía y facilitar el resto de usuario un proceso más sencillo y completo.
 
-Puede contactarme en el siguiente correo electrónico: davidmiguelyusta@gmail.com.
+Puede contactarme en el siguiente correo electrónico: davidmiguelyusta@gmail.com o bien realizando una PR sobre este repositorio.
 
 Gracias de antemano.
 
@@ -19,6 +19,9 @@ Gracias de antemano.
 2. [Echoes](#echoes)
 3. [Cliente NTP](#cliente-ntp)
 4. [Echoes-watcher](#echoes-watcher)
+5. [Docker](#docker)
+6. [Echoes-backup-client](#echoes-backup-client)
+7. [Echoes-monitor](#echoes-monitor)
 
 
 ### Drivers RTL-SDR
@@ -89,7 +92,7 @@ $ sudo nano /etc/ntp.conf
 
 Por defecto, el fichero de configuración dispondrá de una serie de servidores preconfigurados, que en el caso de una distribución con Ubuntu serán los propios servidores de Ubuntu:
 
-```
+```bash
 server 0.ubuntu.pool.ntp.org
 server 1.ubuntu.pool.ntp.org
 server 2.ubuntu.pool.ntp.org
@@ -98,7 +101,7 @@ server 3.ubuntu.pool.ntp.org
 
 Si se quiere sincronizar con un servidor en concreto, se debe indicar el nombre del servidor NTP modificando las líneas anteriores:
 
-```
+```bash
 server nombre-del-servidor-NTP-elegido
 ```
 
@@ -137,7 +140,7 @@ $ sudo python2 get-pip.py
 
 Una vez completados los pasos anteriores, se puede comprobar la versión mediante:
 
-```
+```bash
 $ pip2 --version
 ```
 
@@ -147,13 +150,13 @@ https://github.com/cslab-upm/Echoes-watcher
 
 Mediante el siguiente comando puede descargar el código fuente a su máquina:
 
-```
+```bash
 $ git clone https://github.com/cslab-upm/Echoes-watcher.git
 ```
 
 Esto generará una carpeta con el nombre Echoes-watcher en el directorio en el que se encontrara cuando ejecuto dicho comando. Antes de ejecutar este programa es necesario configurar cierta información en el fichero de configuración de Echoes ECHOES_CONFIG_FILE. En el apartado [Site%20infos] existe una información similar a la siguiente:
 
-```
+```bash
 Altitude=125
 Contact=trustno1@nowhere.org
 Latitude=45.516667
@@ -182,4 +185,114 @@ En el caso de que Echoes no este instalado en el home del usuario, es necesario 
 
 ```bash
 $ nohup /usr/bin/python2.7 watcher.py /path/to/defaults.rts /path/to/working/directory/ </dev/null >/dev/null 2>&1 &
+```
+
+### Docker
+
+Para ejecutar las siguiente aplicaciones, es necesario disponer de Docker. A modo de resumen, Docker permite ejecutar aplicaciones en un entorno aislado de la máquina local, además de permitir empaquetar todas las dependencias de estas en un contenedor.
+
+En este enlace se proporciona una guía muy completa para Ubuntu: https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-20-04-es
+
+Para instalar Docker en Raspbian puede seguir esta guía: https://blog.desdelinux.net/como-instalar-docker-en-raspberry-pi-con-raspbian/
+
+Una vez se disponga de Docker, se puede proceder a instalar el resto de aplicaciones de la distribución que se exponen a continuación.
+
+### Echoes-backup-client
+
+Este servicio se dedica a realizar copias de seguridad de los ficheros generados por Echoes con las detecciones diarias. El servicio se ejecuta una vez al día y enviará a un servidor SFTP del proyecto Contadores de Estrellas los ficheros necesarios para ser procesado. 
+
+En primer lugar, debe descargar el código fuente mediante este comando:
+
+```bash
+git clone https://github.com/neodmy/echoes-backup-client.git
+```
+
+
+La aplicación debe ser configurada en el fichero `docker-compose.yml`, que se encuentra en la raíz del proyecto. Los parámetros de configuración son los siguientes:
+
+- Slack: mediante los siguientes parámetros (opcionales) el usuario puede establecer el canal de Slack en el que se proporcionarán alertas sobre fallos durante el procesamiento diario.
+  - SLACK_TOKEN: token necesario para la autenticación y autorización en el espacio de trabajo de Slack.
+  - SLACK_CHANNEL: identificador del canal de Slack en el que se reportan las incidencias.
+- SFTP: credenciales necesarias para que el cliente pueda realizar el envío de las copias de seguridad.
+  - SFTP_HOSTNAME: nombre del servidor SFTP.
+  - SFTP_PORT: puerto en el que el servidor SFTP escucha.
+  - SFTP_USERNAME: nombre del usuario.
+  - SFTP_PASSWORD: contraseña del usuario.
+- Directorio remoto: ruta completa en el directorio remoto en el que el cliente va a depositar los ficheros a copiar
+  - REMOTE_DIRECTORY: ruta completa al directorio remoto.
+- Parámetros de cliente: estos parámetros incluyen información relativa a la estación:
+  - CLIENT_ID: nombre de la estación. Este parámetro se añadirá a la ruta del directorio remoto para asegurar que cada estación deposita sus ficheros en una ruta propia y no interfiere con los ficheros enviados por otra estación. 
+  - REMOVAL_OFFSET: número de días que los directorios diarios generados por Echoes permanecen en el almacenamiento local.
+- Base de datos: parámetros de conexión a la base de datos:
+  - MONGO_CONNECTION_STRING: parámetro de conexión a la base de datos con la que interactúa el cliente: `<protocolo>://<nombre_base_datos>:<puerto>`.
+- Email: además de la alternativa de Slack, el cliente ofrece la posibilidad (de manera opcional) de reportar las alertas mediante correo electrónico. Lo ideal es crear una cuenta de correo electrónico para cada estación, ya que este será el remitente de los correos electrónicos:
+  - SENDER_SERVICE: servidor SMTP de la cuenta que se utiliza para reportar alertas. Puede ser cualquier servicio comercial que permita el envío de correos electrónicos de manera programática como, por ejemplo, Google.
+  - SENDER_USER: usuario de la cuenta de correo electrónico que se utiliza para reportar alertas.
+  - SENDER_PASSWORD:  contraseña de la cuenta de usuario de correo electrónico que se utiliza para reportar alertas.
+  - REPORT_EMAILS: direcciones de correo electrónico a las que se va a reportar las alertas. El formato es una cadena de texto con un conjunto de emails separados por comas: email1@email.com,email2@email.com.
+- Inicialización: puesto que el servicio realiza una sincronización inicial del contenido del directorio donde Echoes genera los directorios diarios, se proporciona la posibilidad de desactivar esta funcionalidad mediante:
+  - INITIAL_CSV: una cadena de texto con el valor active en el caso de que el usuario desee realizar el envío de la línea del fichero CSV que representa el día a procesar, teniendo en cuenta el contenido del directorio.
+  - INITIAL_UPLOAD: una cadena de texto con el valor active en el caso de que el usuario desee realizar el envío del directorio diario.
+- Cron: este parámetro permite establecer la expresión Cron para determinar el momento en el que se realice el procesado.
+  - CRON_SCHEDULE: Dado que el procesamiento debe ser diario (debido al comportamiento de Echoes), solo se debe modificar los tres primeros valores, que representan el segundo, minuto y hora (de izquierda a derecha) en la que se debe realizar dicho procesamiento. Por ejemplo, la expresión 0 0 8 * * * indica todos los días de la semana a las 8:00 (hay que tener en cuenta la hora local de la máquina en la que se ejecuta el servicio y las diferencias horarias. Esta hora es GMT).
+
+
+Por último, y aunque no es una variable de entorno, pero dado que el servicio se ejecutará en un contenedor Docker, es necesario disponer de un volumen para que la aplicación que ejecuta dentro del contenedor pueda acceder al sistema de ficheros local de la máquina en la que se ejecuta. Esto se puede hacer a través de los host volume, una funcionalidad que proporciona Docker para realizar un mapping del siguiente modo (modificando el fichero `docker-compose.yml`:
+
+```yml
+volumes:
+  - /path/a/directorio/local:/echoes
+```
+
+Mediante esta construcción, cada vez que la aplicación acceda a la ruta /echoes, estará accediendo a la ruta /home/user del sistema de ficheros local. En este caso, el valor a proporcionar será la ruta absoluta al directorio dónde Echoes genera los directorios diarios.
+
+Para lanzar la aplicación basta con ejecutar el siguiente comando en la raíz del proyecto:
+
+```bash
+$ docker-compose --file docker-compose.yml --project-name echoes-backup-client up -d --force-recreate --build
+```
+
+### Echoes-backup-client
+
+Esta aplicación analiza a intervalos regulares el directorio de Echoes indicado en la configuración. Una falta de actividad de Echoes puede deberse a fallos en este, por lo que es recomendable, cada vez que se reciba un aviso de esta aplicación revisar el estado de Echoes.
+
+El código fuente se puede descargar ejecutando:
+
+```bash
+git clone https://github.com/neodmy/local-echoesmonitor.git
+```
+
+En el fichero `src/config.json` se establece la configuración de la aplicación mediante los siguientes parámetros:
+
+- SenderInfo:
+  - `service`: servidor SMTP de la cuenta que se utiliza para reportar alertas. Puede ser cualquier servicio comercial que permita el envío de correos electrónicos de manera programática como, por ejemplo, Google.
+  - `user`: usuario de la cuenta de correo electrónico que se utiliza para reportar alertas.
+  - `pass`:  contraseña de la cuenta de usuario de correo electrónico que se utiliza para reportar alertas.
+
+- ReportEmails:
+  - `reportEmails`: direcciones de correo electrónico a las que se va a reportar las alertas. El formato es una cadena de texto con un conjunto de emails separados por comas: email1@email.com,email2@email.com.
+
+- CheckPeriod: estas variables permiten establecer cada cuando tiempo se ejecutará la revisión del estado de Echoes
+  - `unit`: se aceptan dos valores: `minute` o `hour`
+  - `value`: un número entero
+Mediante estas dos variables, se puede configurar un comportamiento dinámico basado en horas o minutos, de manera que si se configura con:
+
+```js
+unit: "minute"
+value: 1
+```
+La comprobación se realizará cada minuto. Básicamente, ambas variables permiten generar una expresión cron, que para el caso anterior sería `*/value * * * *`
+
+- DirectoryPath:
+  - `directoryPath`: esta variable es la ruta completa al directorio a comprobar de manera periódica, y debería ser configurada con los mismos valores que se incluyan en el fichero `docker-compose.yml` bajo la propiedad `volumes` (similar a lo comentado para `Echoes-backup-client`):
+
+```yml
+volumes:
+  - /path/a/comprobar:/path/a/comprobar
+```
+
+La aplicación se debe lanzar ejecutando el siguiente comando en la ráiz del proyecto:
+
+```bash
+docker-compose up
 ```
