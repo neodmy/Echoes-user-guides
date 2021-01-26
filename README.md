@@ -7,7 +7,7 @@ El objetivo de este documento es proporcionar una guía de usuario para facilita
 
 Esta guía está sujeta a revisión, por lo que, si encuentra algún problema en alguna de las instrucciones facilitadas, póngase en contacto con el autor de esta. Así mismo, si ha sido capaz de encontrar la solución a un problema durante este proceso, le ruego lo comparta con la comunidad para completar esta guía y facilitar el resto de usuario un proceso más sencillo y completo.
 
-Puede contactarme en el siguiente correo electrónico: davidmiguelyusta@gmail.com o bien realizando una PR sobre este repositorio.
+Puede contactar conmigo en el siguiente correo electrónico: davidmiguelyusta@gmail.com o bien realizando una PR sobre este repositorio.
 
 Gracias de antemano.
 
@@ -26,6 +26,57 @@ Gracias de antemano.
 
 ### Drivers RTL-SDR
 
+Para poder recoger los datos del dispositivo RTL-SDR es necesario en primer lugar instalar los drives.
+
+Primero, se debe actualizar los paquetes de la distribución:
+
+```bash
+$ sudo apt-get update
+```
+
+En segundo lugar, se deben instalar las herramientas para recuperar el código fuente, compliar, y hacer la build:
+
+```bash
+$ sudo apt-get install git
+$ sudo apt-get install cmake
+$ sudo apt-get install build-essential
+```
+
+A continuación es necesario instalar la librería de C que proporciona accesso genérico a dispositivos USB:
+
+```bash
+$ sudo apt-get install libusb-1.0-0-dev
+```
+
+Posteriomente, se debe descargar el código fuente y hacer la build:
+
+```bash
+$ git clone git://git.osmocom.org/rtl-sdr.git
+$ cd rtl-sdr/
+$ mkdir build
+$ cd build
+$ cmake ../ -DINSTALL_UDEV_RULES=ON
+$ make
+$ sudo make install
+$ sudo ldconfig
+$ sudo cp ../rtl-sdr.rules /etc/udev/rules.d/
+```
+
+A continuación se debe deshabilitar el driver por defecto ya que provocar errores con el driver que acabamos de instalar:
+
+En el directorio `/etc/modprobe.d` se debe crear un fichero con el nombre de `blacklist-rtl.conf` y añadir la siguiente línea:
+
+```bash
+blacklist dvb_usb_rtl28xxu
+```
+
+Por último, para comprobar que funciona correctamente, se debe ejecutar:
+
+```bash
+$ rtl_test -t
+```
+
+La salida indicará que se está utilizando un dispositivo RTL2832U genérico.
 
 ### Echoes
 
@@ -82,7 +133,7 @@ Primero, se debe instalar el demonio NTP (ntpd):
 
 ```bash
 $ sudo apt-get install ntp
-````
+```
 
 A continuación, debe especificar el nombre del servidor NTP con el que se quiere sincronizar en el fichero de configuración /etc/ntp.conf:
 
