@@ -5,15 +5,17 @@
 El objetivo de este documento es proporcionar una guía de usuario para facilitar el proceso de instalación del software necesario para establecer una estación de radiodetección basada en Echoes, un programa de análisis de espectro mediante dispositivos RTL-SDR. Además de este programa, es necesario disponer de otros programas y servicios adicionales para garantizar el buen funcionamiento de este, así como la recuperación y envío de la información generada por Echoes.
 
 
-Esta guía está sujeta a revisión, por lo que, si encuentra algún problema en alguna de las instrucciones facilitadas, póngase en contacto con el autor de esta. Así mismo, si ha sido capaz de encontrar la solución a un problema durante este proceso, le ruego lo comparta con la comunidad para completar esta guía y facilitar el resto de usuario un proceso más sencillo y completo.
+Esta guía está sujeta a revisión, por lo que, si encuentra algún problema en alguna de las instrucciones facilitadas, póngase en contacto con el autor de esta. Así mismo, si ha sido capaz de encontrar la solución a un problema durante este proceso, le ruego lo comparta con la comunidad para completar esta guía y facilitar el resto de usuario un proceso más sencillo y completo. Puede contactar conmigo en el siguiente correo electrónico: davidmiguelyusta@gmail.com o bien realizando una PR sobre este repositorio.
 
-Puede contactar conmigo en el siguiente correo electrónico: davidmiguelyusta@gmail.com o bien realizando una PR sobre este repositorio.
+Para obtener las información necesaria sobre a qué servidor NTP debe sincronizar, así como credenciales y otros parámetros de configuración relativos a la estación, póngase en contacto con los responsables del proyecto Contadores de Estrellas.
 
-Gracias de antemano.
+Por favor, siga el proceso de instalación en el order proporcionado en la [Tabla de Contenido](#tabla-de-contenido)
+
+Gracias.
 
 ---
 
-## Table de contenido
+## Tabla de contenido
 
 1. [Drivers RTL-SDR](#drivers-rtl-sdr)
 2. [Echoes](#echoes)
@@ -26,7 +28,7 @@ Gracias de antemano.
 
 ### Drivers RTL-SDR
 
-Para poder recoger los datos del dispositivo RTL-SDR es necesario en primer lugar instalar los drives.
+Para poder recoger los datos del dispositivo RTL-SDR es necesario en primer lugar instalar los drivers.
 
 Primero, se debe actualizar los paquetes de la distribución:
 
@@ -62,9 +64,7 @@ $ sudo ldconfig
 $ sudo cp ../rtl-sdr.rules /etc/udev/rules.d/
 ```
 
-A continuación se debe deshabilitar el driver por defecto ya que provocar errores con el driver que acabamos de instalar:
-
-En el directorio `/etc/modprobe.d` se debe crear un fichero con el nombre de `blacklist-rtl.conf` y añadir la siguiente línea:
+A continuación se debe deshabilitar el driver por defecto ya que no funciona para dispositivos SDR y genera interferencias con el driver que acabamos de instalar. En el directorio `/etc/modprobe.d` se debe crear un fichero con el nombre de `blacklist-rtl.conf` y añadir la siguiente línea:
 
 ```bash
 blacklist dvb_usb_rtl28xxu
@@ -127,7 +127,7 @@ https://sourceforge.net/projects/echoes/files/documentation/echoes-manual.pdf/do
 
 ### Cliente NTP
 
-El protocolo NTP (Network Time Protocol) es un protocolo utilizado para la sincronización de los relojes de los sistemas informáticos mediante enrutamiento de paquetes en la red de acuerdo con una latencia variante. Es decir, permite indicar de forma precisa la hora a los sistemas independiente de la lentitud de la red.
+El protocolo NTP (Network Time Protocol) es un protocolo utilizado para la sincronización de los relojes de los sistemas informáticos mediante enrutamiento de paquetes en la red de acuerdo con una latencia variable. Es decir, permite indicar de forma precisa la hora a los sistemas independiente de la lentitud de la red.
 
 Primero, se debe instalar el demonio NTP (ntpd):
 
@@ -218,7 +218,7 @@ StationLogo=:/icon128
 StationName=None
 ```
 
-La variable StationName debe ser configurada con el nombre de la estación.
+La variable `StationName` debe ser configurada con el nombre de la estación.
 
 Una vez configurado el nombre de la variable, se procede a instalar las dependencias de de Echoes-watcher. Para ello, en la carpeta descargada del repositorio, se debe ejecutar:
 
@@ -262,30 +262,30 @@ git clone https://github.com/neodmy/echoes-backup-client.git
 La aplicación debe ser configurada en el fichero `docker-compose.yml`, que se encuentra en la raíz del proyecto. Los parámetros de configuración son los siguientes:
 
 - Slack: mediante los siguientes parámetros (opcionales) el usuario puede establecer el canal de Slack en el que se proporcionarán alertas sobre fallos durante el procesamiento diario.
-  - SLACK_TOKEN: token necesario para la autenticación y autorización en el espacio de trabajo de Slack.
-  - SLACK_CHANNEL: identificador del canal de Slack en el que se reportan las incidencias.
+  - `SLACK_TOKEN`: token necesario para la autenticación y autorización en el espacio de trabajo de Slack.
+  - `SLACK_CHANNEL`: identificador del canal de Slack en el que se reportan las incidencias.
 - SFTP: credenciales necesarias para que el cliente pueda realizar el envío de las copias de seguridad.
-  - SFTP_HOSTNAME: nombre del servidor SFTP.
-  - SFTP_PORT: puerto en el que el servidor SFTP escucha.
-  - SFTP_USERNAME: nombre del usuario.
-  - SFTP_PASSWORD: contraseña del usuario.
+  - `SFTP_HOSTNAME`: nombre del servidor SFTP.
+  - `SFTP_PORT`: puerto en el que el servidor SFTP escucha.
+  - `SFTP_USERNAME`: nombre del usuario.
+  - `SFTP_PASSWORD`: contraseña del usuario.
 - Directorio remoto: ruta completa en el directorio remoto en el que el cliente va a depositar los ficheros a copiar
-  - REMOTE_DIRECTORY: ruta completa al directorio remoto.
+  - `REMOTE_DIRECTORY`: ruta completa al directorio remoto.
 - Parámetros de cliente: estos parámetros incluyen información relativa a la estación:
-  - CLIENT_ID: nombre de la estación. Este parámetro se añadirá a la ruta del directorio remoto para asegurar que cada estación deposita sus ficheros en una ruta propia y no interfiere con los ficheros enviados por otra estación. 
-  - REMOVAL_OFFSET: número de días que los directorios diarios generados por Echoes permanecen en el almacenamiento local.
+  - `CLIENT_ID`: nombre de la estación. Este parámetro se añadirá a la ruta del directorio remoto para asegurar que cada estación deposita sus ficheros en una ruta propia y no interfiere con los ficheros enviados por otra estación. 
+  - `REMOVAL_OFFSET`: número de días que los directorios diarios generados por Echoes permanecen en el almacenamiento local.
 - Base de datos: parámetros de conexión a la base de datos:
-  - MONGO_CONNECTION_STRING: parámetro de conexión a la base de datos con la que interactúa el cliente: `<protocolo>://<nombre_base_datos>:<puerto>`.
+  - `MONGO_CONNECTION_STRING`: parámetro de conexión a la base de datos con la que interactúa el cliente: `<protocolo>://<nombre_base_datos>:<puerto>`.
 - Email: además de la alternativa de Slack, el cliente ofrece la posibilidad (de manera opcional) de reportar las alertas mediante correo electrónico. Lo ideal es crear una cuenta de correo electrónico para cada estación, ya que este será el remitente de los correos electrónicos:
-  - SENDER_SERVICE: servidor SMTP de la cuenta que se utiliza para reportar alertas. Puede ser cualquier servicio comercial que permita el envío de correos electrónicos de manera programática como, por ejemplo, Google.
-  - SENDER_USER: usuario de la cuenta de correo electrónico que se utiliza para reportar alertas.
-  - SENDER_PASSWORD:  contraseña de la cuenta de usuario de correo electrónico que se utiliza para reportar alertas.
-  - REPORT_EMAILS: direcciones de correo electrónico a las que se va a reportar las alertas. El formato es una cadena de texto con un conjunto de emails separados por comas: email1@email.com,email2@email.com.
+  - `SENDER_SERVICE`: servidor SMTP de la cuenta que se utiliza para reportar alertas. Puede ser cualquier servicio comercial que permita el envío de correos electrónicos de manera programática como, por ejemplo, Google.
+  - `SENDER_USER`: usuario de la cuenta de correo electrónico que se utiliza para reportar alertas.
+  - `SENDER_PASSWORD`:  contraseña de la cuenta de usuario de correo electrónico que se utiliza para reportar alertas.
+  - `REPORT_EMAILS`: direcciones de correo electrónico a las que se va a reportar las alertas. El formato es una cadena de texto con un conjunto de emails separados por comas: email1@email.com,email2@email.com.
 - Inicialización: puesto que el servicio realiza una sincronización inicial del contenido del directorio donde Echoes genera los directorios diarios, se proporciona la posibilidad de desactivar esta funcionalidad mediante:
-  - INITIAL_CSV: una cadena de texto con el valor active en el caso de que el usuario desee realizar el envío de la línea del fichero CSV que representa el día a procesar, teniendo en cuenta el contenido del directorio.
-  - INITIAL_UPLOAD: una cadena de texto con el valor active en el caso de que el usuario desee realizar el envío del directorio diario.
+  - `INITIAL_CSV`: una cadena de texto con el valor active en el caso de que el usuario desee realizar el envío de la línea del fichero CSV que representa el día a procesar, teniendo en cuenta el contenido del directorio.
+  - `INITIAL_UPLOAD`: una cadena de texto con el valor active en el caso de que el usuario desee realizar el envío del directorio diario.
 - Cron: este parámetro permite establecer la expresión Cron para determinar el momento en el que se realice el procesado.
-  - CRON_SCHEDULE: Dado que el procesamiento debe ser diario (debido al comportamiento de Echoes), solo se debe modificar los tres primeros valores, que representan el segundo, minuto y hora (de izquierda a derecha) en la que se debe realizar dicho procesamiento. Por ejemplo, la expresión 0 0 8 * * * indica todos los días de la semana a las 8:00 (hay que tener en cuenta la hora local de la máquina en la que se ejecuta el servicio y las diferencias horarias. Esta hora es GMT).
+  - `CRON_SCHEDULE`: Dado que el procesamiento debe ser diario (debido al comportamiento de Echoes), solo se debe modificar los tres primeros valores, que representan el segundo, minuto y hora (de izquierda a derecha) en la que se debe realizar dicho procesamiento. Por ejemplo, la expresión 0 0 8 * * * indica todos los días de la semana a las 8:00 (hay que tener en cuenta la hora local de la máquina en la que se ejecuta el servicio y las diferencias horarias. Esta hora es GMT).
 
 
 Por último, y aunque no es una variable de entorno, pero dado que el servicio se ejecutará en un contenedor Docker, es necesario disponer de un volumen para que la aplicación que ejecuta dentro del contenedor pueda acceder al sistema de ficheros local de la máquina en la que se ejecuta. Esto se puede hacer a través de los host volume, una funcionalidad que proporciona Docker para realizar un mapping del siguiente modo (modificando el fichero `docker-compose.yml`:
