@@ -7,7 +7,7 @@ El objetivo de este documento es proporcionar una guía de usuario para facilita
 
 Esta guía está sujeta a revisión, por lo que, si encuentra algún problema en alguna de las instrucciones facilitadas, póngase en contacto con el autor de esta. Así mismo, si ha sido capaz de encontrar la solución a un problema durante este proceso, le ruego lo comparta con la comunidad para completar esta guía y facilitar el resto de usuario un proceso más sencillo y completo. Puede contactar conmigo en el siguiente correo electrónico: davidmiguelyusta@gmail.com o bien realizando una PR sobre este repositorio.
 
-Para obtener las información necesaria sobre a qué servidor NTP debe sincronizar, así como credenciales y otros parámetros de configuración relativos a la estación, póngase en contacto con los responsables del proyecto Contadores de Estrellas.
+Para obtener las información necesaria sobre a qué servidor NTP debe sincronizar, así como credenciales y otros parámetros de configuración relativos a la estación, póngase en contacto con los responsables del proyecto Contadores de Estrellas (Raquel Cedazo: rcedazo@ciclope.info)
 
 Por favor, siga el proceso de instalación en el order proporcionado en la [Tabla de Contenido](#tabla-de-contenido)
 
@@ -297,13 +297,20 @@ volumes:
 
 Mediante esta construcción, cada vez que la aplicación acceda a la ruta /echoes, estará accediendo a la ruta /home/user del sistema de ficheros local. En este caso, el valor a proporcionar será la ruta absoluta al directorio dónde Echoes genera los directorios diarios.
 
-Para lanzar la aplicación basta con ejecutar el siguiente comando en la raíz del proyecto:
+Para lanzar la aplicación basta con ejecutar el siguiente comando **desde la raíz del proyecto**:
 
 ```bash
 $ docker-compose --file docker-compose.yml --project-name echoes-backup-client up -d --force-recreate --build
 ```
 
-### Echoes-backup-client
+o bien con la ruta absoluta al fichero docker-compose.yml que se encuentra en la raíz del proyecto:
+
+```bash
+$ docker-compose --file ruta/absoluta/a/fichero/docker-compose.yml --project-name echoes-backup-client up -d --force-recreate --build
+```
+
+
+### Echoes-monitor
 
 Esta aplicación analiza a intervalos regulares el directorio de Echoes indicado en la configuración. Una falta de actividad de Echoes puede deberse a fallos en este, por lo que es recomendable, cada vez que se reciba un aviso de esta aplicación revisar el estado de Echoes.
 
